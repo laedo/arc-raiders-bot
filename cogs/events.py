@@ -168,7 +168,7 @@ class Events(commands.Cog):
             value = desc if desc != "No description available." else "—"
             embed.add_field(name=base_name, value=value, inline=False)
 
-        embed.set_footer(text="Data from Mahcks API")
+        embed.set_footer(text="")
         await interaction.followup.send(embed=embed)
 
     # ── /events ───────────────────────────────────────────────────────
@@ -217,7 +217,7 @@ class Events(commands.Cog):
                 if map_img:
                     embed_ev.set_thumbnail(url=map_img)
 
-                embed_ev.set_footer(text="Data from MetaForge / Mahcks API")
+                embed_ev.set_footer(text="")
                 embeds.append(embed_ev)
         else:
             embed_none = discord.Embed(
@@ -226,7 +226,7 @@ class Events(commands.Cog):
                 color=discord.Color.gold(),
                 timestamp=datetime.now(timezone.utc),
             )
-            embed_none.set_footer(text="Data from MetaForge / Mahcks API")
+            embed_none.set_footer(text="")
             embeds.append(embed_none)
 
         # Upcoming events — single embed
@@ -249,7 +249,7 @@ class Events(commands.Cog):
                 embed_upcoming.add_field(name=name, value="\n".join(value_parts), inline=False)
         else:
             embed_upcoming.description = "Sin eventos próximos en este momento."
-        embed_upcoming.set_footer(text="Data from MetaForge / Mahcks API")
+        embed_upcoming.set_footer(text="")
         embeds.append(embed_upcoming)
 
         await interaction.followup.send(embeds=embeds)
@@ -303,7 +303,7 @@ class Events(commands.Cog):
         if image_url:
             embed.set_image(url=image_url)
 
-        embed.set_footer(text="Data from MetaForge / Mahcks API")
+        embed.set_footer(text="")
         await interaction.followup.send(embed=embed)
 
     @mapinfo_command.autocomplete("name")
