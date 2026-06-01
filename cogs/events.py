@@ -136,9 +136,13 @@ class Events(commands.Cog):
             await interaction.followup.send("Could not retrieve events data from the API.")
             return
 
+        now = datetime.now(timezone.utc)
         active_events = []
         upcoming_events = []
         for ev in events_data:
+            end_dt = self._parse_timestamp(self._get_end_time(ev))
+            if end_dt and end_dt <= now:
+                continue  # skip past events
             if self._is_active(ev):
                 active_events.append(ev)
             else:
