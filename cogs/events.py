@@ -195,7 +195,7 @@ class Events(commands.Cog):
                 value_parts.append(f"**Ends:** {timer}")
                 embed_active.add_field(name=name, value="\n".join(value_parts), inline=False)
         else:
-            embed_active.description = "Sin eventos activos en este momento."
+            embed_active.description = "Sin eventos activo en este momento."
         embed_active.set_footer(text="Data from MetaForge / Mahcks API")
         embeds.append(embed_active)
 
