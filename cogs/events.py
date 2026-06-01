@@ -12,6 +12,16 @@ from config import (
 )
 
 
+MAP_IMAGES = {
+    "dam battlegrounds": "https://cdn.mapgenie.io/images/games/arc-raiders/maps/dam-battlegrounds.jpg",
+    "buried city":       "https://cdn.mapgenie.io/images/games/arc-raiders/maps/buried-city.jpg",
+    "spaceport":         "https://cdn.mapgenie.io/images/games/arc-raiders/maps/spaceport.jpg",
+    "the blue gate":     "https://cdn.mapgenie.io/images/games/arc-raiders/maps/the-blue-gate.jpg",
+    "stella montis":     "https://cdn.mapgenie.io/images/games/arc-raiders/maps/stella-montis.jpg",
+    "riven tides":       "https://cdn.mapgenie.io/images/games/arc-raiders/maps/riven-tides.jpg",
+}
+
+
 class Events(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -109,6 +119,14 @@ class Events(commands.Cog):
     def _get_end_time(event: dict):
         return event.get("endTime") or event.get("end_time") or event.get("endsAt")
 
+    @staticmethod
+    def _get_map_image(map_name: str) -> str | None:
+        """Return a MapGenie CDN image URL for the given map name, or None."""
+        if not map_name:
+            return None
+        base = map_name.rsplit(" Upper", 1)[0].rsplit(" Lower", 1)[0]
+        return MAP_IMAGES.get(base.lower())
+
     def _is_active(self, event: dict) -> bool:
         """Check if an event is currently active."""
         now = datetime.now(timezone.utc)
@@ -176,41 +194,57 @@ class Events(commands.Cog):
 
         embeds = []
 
-        # Active events — yellow/gold
-        embed_active = discord.Embed(
-            title="Active Events",
-            color=discord.Color.gold(),
-            timestamp=datetime.now(timezone.utc),
-        )
+        # Active events — one embed per event
         if active_events:
-            for ev in active_events[:12]:
+            for ev in active_events[:10]:
                 name = ev.get("name") or ev.get("title") or ev.get("eventName") or "Unknown Event"
                 map_name = ev.get("map") or ev.get("mapName") or ev.get("location") or ""
                 end_dt = self._parse_timestamp(self._get_end_time(ev))
                 timer = f"<t:{int(end_dt.timestamp())}:R>" if end_dt else "Unknown"
 
-                value_parts = []
+                embed_ev = discord.Embed(
+                    title=f"🟢 {name}",
+                    color=discord.Color.gold(),
+                    timestamp=datetime.now(timezone.utc),
+                )
                 if map_name:
-                    value_parts.append(f"**Map:** {map_name}")
-                value_parts.append(f"**Ends:** {timer}")
-                embed_active.add_field(name=name, value="\n".join(value_parts), inline=False)
-        else:
-            embed_active.description = "Sin eventos activo en este momento."
-        embed_active.set_footer(text="Data from MetaForge / Mahcks API")
-        embeds.append(embed_active)
+                    embed_ev.add_field(name="Map", value=map_name, inline=True)
+                embed_ev.add_field(name="Ends", value=timer, inline=True)
 
-        # Upcoming events — cyan/teal
+                map_img = self._get_map_image(map_name)
+                if map_img:
+                    embed_ev.set_thumbnail(url=map_img)
+
+                embed_ev.set_footer(text="Data from MetaForge / Mahcks API")
+                embeds.append(embed_ev)
+        else:
+            embed_none = discord.Embed(
+                title="Active Events",
+                description="Sin eventos activo en este momento.",
+                color=discord.Color.gold(),
+                timestamp=datetime.now(timezone.utc),
+            )
+            embed_none.set_footer(text="Data from MetaForge / Mahcks API")
+            embeds.append(embed_none)
+
+        # Upcoming events — single embed
         embed_upcoming = discord.Embed(
             title="Upcoming Events",
             color=discord.Color.teal(),
             timestamp=datetime.now(timezone.utc),
         )
         if upcoming_events:
+            first_image_set = False
             for ev in upcoming_events[:12]:
                 name = ev.get("name") or ev.get("title") or ev.get("eventName") or "Unknown Event"
                 map_name = ev.get("map") or ev.get("mapName") or ev.get("location") or ""
                 start_dt = self._parse_timestamp(self._get_start_time(ev))
                 timer = f"<t:{int(start_dt.timestamp())}:R>" if start_dt else "Unknown"
+
+                map_img = self._get_map_image(map_name)
+                if map_img and not first_image_set:
+                    embed_upcoming.set_thumbnail(url=map_img)
+                    first_image_set = True
 
                 value_parts = []
                 if map_name:
@@ -268,7 +302,8 @@ class Events(commands.Cog):
             if value is not None:
                 embed.add_field(name=key.capitalize(), value=str(value), inline=True)
 
-        image_url = match.get("image") or match.get("imageUrl") or match.get("thumbnail")
+        image_url = (match.get("image") or match.get("imageUrl") or match.get("thumbnail")
+                     or self._get_map_image(self._map_name(match)))
         if image_url:
             embed.set_image(url=image_url)
 
