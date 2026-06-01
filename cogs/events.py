@@ -139,9 +139,15 @@ class Events(commands.Cog):
         for m in maps_data[:25]:  # Discord embed field limit
             name = self._map_name(m)
             desc = self._map_description(m)
-            if len(desc) > 100:
-                desc = desc[:97] + "..."
-            embed.add_field(name=name, value=desc, inline=False)
+            image = m.get("image") or m.get("imageUrl") or m.get("thumbnail") or ""
+            value_parts = []
+            if desc != "No description available.":
+                if len(desc) > 100:
+                    desc = desc[:97] + "..."
+                value_parts.append(desc)
+            if image:
+                value_parts.append(f"[View Map]({image})")
+            embed.add_field(name=name, value="\n".join(value_parts) or "—", inline=False)
 
         embed.set_footer(text="Data from MetaForge / Mahcks API")
         await interaction.followup.send(embed=embed)
