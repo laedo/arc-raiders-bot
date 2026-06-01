@@ -236,17 +236,11 @@ class Events(commands.Cog):
             timestamp=datetime.now(timezone.utc),
         )
         if upcoming_events:
-            first_image_set = False
             for ev in upcoming_events[:12]:
                 name = ev.get("name") or ev.get("title") or ev.get("eventName") or "Unknown Event"
                 map_name = ev.get("map") or ev.get("mapName") or ev.get("location") or ""
                 start_dt = self._parse_timestamp(self._get_start_time(ev))
                 timer = f"<t:{int(start_dt.timestamp())}:R>" if start_dt else "Unknown"
-
-                map_img = self._get_map_image(map_name)
-                if map_img and not first_image_set:
-                    embed_upcoming.set_thumbnail(url=map_img)
-                    first_image_set = True
 
                 value_parts = []
                 if map_name:
