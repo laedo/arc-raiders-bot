@@ -68,21 +68,35 @@ class Events(commands.Cog):
         )
 
     @staticmethod
-    def _format_timer(event: dict) -> str:
-        """Build a human-readable timer string from an event dict."""
-        end_raw = event.get("endTime") or event.get("end_time") or event.get("endsAt")
-        if end_raw:
-            try:
-                if isinstance(end_raw, (int, float)):
-                    # API returns milliseconds, convert to seconds
-                    ts = end_raw / 1000 if end_raw > 1e12 else end_raw
-                    end_dt = datetime.fromtimestamp(ts, tz=timezone.utc)
-                else:
-                    end_dt = datetime.fromisoformat(str(end_raw).replace("Z", "+00:00"))
-                return f"<t:{int(end_dt.timestamp())}:R>"
-            except Exception:
-                return str(end_raw)
-        return "Unknown"
+    def _parse_timestamp(raw) -> datetime | None:
+        """Parse a timestamp from the API (ms epoch, seconds epoch, or ISO string)."""
+        if raw is None:
+            return None
+        try:
+            if isinstance(raw, (int, float)):
+                ts = raw / 1000 if raw > 1e12 else raw
+                return datetime.fromtimestamp(ts, tz=timezone.utc)
+            return datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+        except Exception:
+            return None
+
+    @staticmethod
+    def _get_start_time(event: dict):
+        return event.get("startTime") or event.get("start_time") or event.get("startsAt")
+
+    @staticmethod
+    def _get_end_time(event: dict):
+        return event.get("endTime") or event.get("end_time") or event.get("endsAt")
+
+    def _is_active(self, event: dict) -> bool:
+        """Check if an event is currently active."""
+        now = datetime.now(timezone.utc)
+        end_dt = self._parse_timestamp(self._get_end_time(event))
+        if end_dt and end_dt > now:
+            start_dt = self._parse_timestamp(self._get_start_time(event))
+            if start_dt is None or start_dt <= now:
+                return True
+        return False
 
     # ── /maps ─────────────────────────────────────────────────────────
 
@@ -122,35 +136,69 @@ class Events(commands.Cog):
             await interaction.followup.send("Could not retrieve events data from the API.")
             return
 
-        embed = discord.Embed(
-            title="Arc Raiders — Active Events",
-            color=discord.Color.gold(),
-            timestamp=datetime.now(timezone.utc),
-        )
+        active_events = []
+        upcoming_events = []
+        for ev in events_data:
+            if self._is_active(ev):
+                active_events.append(ev)
+            else:
+                upcoming_events.append(ev)
 
-        for ev in events_data[:25]:
-            name = ev.get("name") or ev.get("title") or ev.get("eventName") or "Unknown Event"
-            map_name = ev.get("map") or ev.get("mapName") or ev.get("location") or ""
-            timer = self._format_timer(ev)
+        embeds = []
 
-            value_parts = []
-            if map_name:
-                value_parts.append(f"**Map:** {map_name}")
-            value_parts.append(f"**Ends:** {timer}")
+        # Active events — yellow/gold
+        if active_events:
+            embed_active = discord.Embed(
+                title="Active Events",
+                color=discord.Color.gold(),
+                timestamp=datetime.now(timezone.utc),
+            )
+            for ev in active_events[:12]:
+                name = ev.get("name") or ev.get("title") or ev.get("eventName") or "Unknown Event"
+                map_name = ev.get("map") or ev.get("mapName") or ev.get("location") or ""
+                end_dt = self._parse_timestamp(self._get_end_time(ev))
+                timer = f"<t:{int(end_dt.timestamp())}:R>" if end_dt else "Unknown"
 
-            description = ev.get("description") or ev.get("desc") or ""
-            if description:
-                if len(description) > 80:
-                    description = description[:77] + "..."
-                value_parts.append(description)
+                value_parts = []
+                if map_name:
+                    value_parts.append(f"**Map:** {map_name}")
+                value_parts.append(f"**Ends:** {timer}")
+                embed_active.add_field(name=name, value="\n".join(value_parts), inline=False)
 
-            embed.add_field(name=name, value="\n".join(value_parts), inline=False)
+            embed_active.set_footer(text="Data from MetaForge / Mahcks API")
+            embeds.append(embed_active)
 
-        if not events_data:
-            embed.description = "No active events right now."
+        # Upcoming events — cyan/teal
+        if upcoming_events:
+            embed_upcoming = discord.Embed(
+                title="Upcoming Events",
+                color=discord.Color.teal(),
+                timestamp=datetime.now(timezone.utc),
+            )
+            for ev in upcoming_events[:12]:
+                name = ev.get("name") or ev.get("title") or ev.get("eventName") or "Unknown Event"
+                map_name = ev.get("map") or ev.get("mapName") or ev.get("location") or ""
+                start_dt = self._parse_timestamp(self._get_start_time(ev))
+                timer = f"<t:{int(start_dt.timestamp())}:R>" if start_dt else "Unknown"
 
-        embed.set_footer(text="Data from MetaForge / Mahcks API")
-        await interaction.followup.send(embed=embed)
+                value_parts = []
+                if map_name:
+                    value_parts.append(f"**Map:** {map_name}")
+                value_parts.append(f"**Starts:** {timer}")
+                embed_upcoming.add_field(name=name, value="\n".join(value_parts), inline=False)
+
+            embed_upcoming.set_footer(text="Data from MetaForge / Mahcks API")
+            embeds.append(embed_upcoming)
+
+        if not embeds:
+            no_events = discord.Embed(
+                title="Arc Raiders — Events",
+                description="No events found right now.",
+                color=discord.Color.greyple(),
+            )
+            embeds.append(no_events)
+
+        await interaction.followup.send(embeds=embeds)
 
     # ── /mapinfo ──────────────────────────────────────────────────────
 
