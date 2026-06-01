@@ -177,12 +177,12 @@ class Events(commands.Cog):
         embeds = []
 
         # Active events — yellow/gold
+        embed_active = discord.Embed(
+            title="Active Events",
+            color=discord.Color.gold(),
+            timestamp=datetime.now(timezone.utc),
+        )
         if active_events:
-            embed_active = discord.Embed(
-                title="Active Events",
-                color=discord.Color.gold(),
-                timestamp=datetime.now(timezone.utc),
-            )
             for ev in active_events[:12]:
                 name = ev.get("name") or ev.get("title") or ev.get("eventName") or "Unknown Event"
                 map_name = ev.get("map") or ev.get("mapName") or ev.get("location") or ""
@@ -194,17 +194,18 @@ class Events(commands.Cog):
                     value_parts.append(f"**Map:** {map_name}")
                 value_parts.append(f"**Ends:** {timer}")
                 embed_active.add_field(name=name, value="\n".join(value_parts), inline=False)
-
-            embed_active.set_footer(text="Data from MetaForge / Mahcks API")
-            embeds.append(embed_active)
+        else:
+            embed_active.description = "Sin eventos activos en este momento."
+        embed_active.set_footer(text="Data from MetaForge / Mahcks API")
+        embeds.append(embed_active)
 
         # Upcoming events — cyan/teal
+        embed_upcoming = discord.Embed(
+            title="Upcoming Events",
+            color=discord.Color.teal(),
+            timestamp=datetime.now(timezone.utc),
+        )
         if upcoming_events:
-            embed_upcoming = discord.Embed(
-                title="Upcoming Events",
-                color=discord.Color.teal(),
-                timestamp=datetime.now(timezone.utc),
-            )
             for ev in upcoming_events[:12]:
                 name = ev.get("name") or ev.get("title") or ev.get("eventName") or "Unknown Event"
                 map_name = ev.get("map") or ev.get("mapName") or ev.get("location") or ""
@@ -216,17 +217,10 @@ class Events(commands.Cog):
                     value_parts.append(f"**Map:** {map_name}")
                 value_parts.append(f"**Starts:** {timer}")
                 embed_upcoming.add_field(name=name, value="\n".join(value_parts), inline=False)
-
-            embed_upcoming.set_footer(text="Data from MetaForge / Mahcks API")
-            embeds.append(embed_upcoming)
-
-        if not embeds:
-            no_events = discord.Embed(
-                title="Arc Raiders — Events",
-                description="No events found right now.",
-                color=discord.Color.greyple(),
-            )
-            embeds.append(no_events)
+        else:
+            embed_upcoming.description = "Sin eventos próximos en este momento."
+        embed_upcoming.set_footer(text="Data from MetaForge / Mahcks API")
+        embeds.append(embed_upcoming)
 
         await interaction.followup.send(embeds=embeds)
 
