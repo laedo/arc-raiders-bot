@@ -206,13 +206,13 @@ class Events(commands.Cog):
 
                 embed_ev = discord.Embed(
                     title=f"🟢 {name}",
-                    description="───────────────────────────────────────",
                     color=discord.Color.gold(),
                     timestamp=datetime.now(timezone.utc),
                 )
                 if map_name:
                     embed_ev.add_field(name="Map", value=map_name, inline=True)
                 embed_ev.add_field(name="Ends", value=timer, inline=True)
+                embed_ev.add_field(name="\u200b", value="───────────────────────────────────────", inline=False)
 
                 map_img = self._get_map_image(map_name)
                 if map_img:
@@ -249,6 +249,7 @@ class Events(commands.Cog):
                 value_parts.append(f"**Starts:** {timer}")
                 value_parts.append("───────────────────")
                 embed_upcoming.add_field(name=name, value="\n".join(value_parts), inline=False)
+            embed_upcoming.add_field(name="\u200b", value="───────────────────────────────────────", inline=False)
         else:
             embed_upcoming.description = "Sin eventos próximos en este momento."
         embed_upcoming.set_footer(text="")
