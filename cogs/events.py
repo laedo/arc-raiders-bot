@@ -130,27 +130,25 @@ class Events(commands.Cog):
             await interaction.followup.send("Could not retrieve map data from the API.")
             return
 
-        embed = discord.Embed(
-            title="Arc Raiders — Maps",
-            color=discord.Color.blue(),
-            timestamp=datetime.now(timezone.utc),
-        )
-
-        for m in maps_data[:25]:  # Discord embed field limit
+        embeds = []
+        for m in maps_data[:10]:  # Discord max 10 embeds per message
             name = self._map_name(m)
             desc = self._map_description(m)
-            image = m.get("image") or m.get("imageUrl") or m.get("thumbnail") or ""
-            value_parts = []
+            embed = discord.Embed(
+                title=name,
+                color=discord.Color.blue(),
+            )
             if desc != "No description available.":
-                if len(desc) > 100:
-                    desc = desc[:97] + "..."
-                value_parts.append(desc)
+                embed.description = desc
+            image = m.get("image") or m.get("imageUrl") or m.get("thumbnail")
             if image:
-                value_parts.append(f"[View Map]({image})")
-            embed.add_field(name=name, value="\n".join(value_parts) or "—", inline=False)
+                embed.set_image(url=image)
+            embeds.append(embed)
 
-        embed.set_footer(text="Data from MetaForge / Mahcks API")
-        await interaction.followup.send(embed=embed)
+        if embeds:
+            embeds[-1].set_footer(text="Data from MetaForge / Mahcks API")
+            embeds[-1].timestamp = datetime.now(timezone.utc)
+        await interaction.followup.send(embeds=embeds)
 
     # ── /events ───────────────────────────────────────────────────────
 
