@@ -24,12 +24,15 @@ class Events(commands.Cog):
         if self.session:
             await self.session.close()
 
-    async def _fetch(self, primary_url: str, backup_url: str) -> dict | list | None:
-        """Try primary API, fall back to backup on failure."""
-        for url in (primary_url, backup_url):
+    async def _fetch(self, *urls: str) -> dict | list | None:
+        """Try each URL in order, return first successful JSON response."""
+        for url in urls:
             try:
                 async with self.session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
                     if resp.status == 200:
+                        content_type = resp.headers.get("content-type", "")
+                        if "json" not in content_type and "javascript" not in content_type:
+                            continue
                         return await resp.json()
             except Exception:
                 continue
@@ -55,17 +58,35 @@ class Events(commands.Cog):
     # ── Helpers ───────────────────────────────────────────────────────
 
     @staticmethod
+    def _localized_str(value) -> str | None:
+        """Extract a string from a value that may be a plain string or a localization dict."""
+        if isinstance(value, str):
+            return value
+        if isinstance(value, dict):
+            return value.get("en") or next(iter(value.values()), None)
+        return None
+
+    @staticmethod
     def _map_name(m: dict) -> str:
-        return m.get("name") or m.get("title") or m.get("mapName") or "Unknown"
+        for key in ("name", "title", "mapName", "displayName"):
+            val = m.get(key)
+            if val is None:
+                continue
+            resolved = Events._localized_str(val)
+            if resolved:
+                return resolved
+        return "Unknown"
 
     @staticmethod
     def _map_description(m: dict) -> str:
-        return (
-            m.get("description")
-            or m.get("desc")
-            or m.get("summary")
-            or "No description available."
-        )
+        for key in ("description", "desc", "summary"):
+            val = m.get(key)
+            if val is None:
+                continue
+            resolved = Events._localized_str(val)
+            if resolved:
+                return resolved
+        return "No description available."
 
     @staticmethod
     def _parse_timestamp(raw) -> datetime | None:
