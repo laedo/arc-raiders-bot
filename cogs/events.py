@@ -206,7 +206,7 @@ class Events(commands.Cog):
 
                 embed_ev = discord.Embed(
                     title=f"🟢 {name}",
-                    description="\u200b " * 20,
+                    description="───────────────────────────────────────",
                     color=discord.Color.gold(),
                     timestamp=datetime.now(timezone.utc),
                 )
