@@ -246,8 +246,8 @@ class Events(commands.Cog):
                 if map_name:
                     value_parts.append(f"**Map:** {map_name}")
                 value_parts.append(f"**Starts:** {timer}")
+                value_parts.append("───────────────────")
                 embed_upcoming.add_field(name=name, value="\n".join(value_parts), inline=False)
-                embed_upcoming.add_field(name="\u200b", value="\u200b", inline=False)
         else:
             embed_upcoming.description = "Sin eventos próximos en este momento."
         embed_upcoming.set_footer(text="")
