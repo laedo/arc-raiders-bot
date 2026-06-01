@@ -14,9 +14,11 @@ from config import (
 
 MAP_IMAGES = {
     "dam battlegrounds": "https://cdn.mapgenie.io/images/games/arc-raiders/maps/dam-battlegrounds.jpg",
+    "dam":               "https://cdn.mapgenie.io/images/games/arc-raiders/maps/dam-battlegrounds.jpg",
     "buried city":       "https://cdn.mapgenie.io/images/games/arc-raiders/maps/buried-city.jpg",
     "spaceport":         "https://cdn.mapgenie.io/images/games/arc-raiders/maps/spaceport.jpg",
     "the blue gate":     "https://cdn.mapgenie.io/images/games/arc-raiders/maps/the-blue-gate.jpg",
+    "blue gate":         "https://cdn.mapgenie.io/images/games/arc-raiders/maps/the-blue-gate.jpg",
     "stella montis":     "https://cdn.mapgenie.io/images/games/arc-raiders/maps/stella-montis.jpg",
     "riven tides":       "https://cdn.mapgenie.io/images/games/arc-raiders/maps/riven-tides.jpg",
 }
