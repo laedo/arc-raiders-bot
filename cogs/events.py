@@ -217,6 +217,7 @@ class Events(commands.Cog):
                 if map_img:
                     embed_ev.set_thumbnail(url=map_img)
 
+                embed_ev.add_field(name="\u200b", value="\u200b" * 38, inline=False)
                 embed_ev.set_footer(text="")
                 embeds.append(embed_ev)
         else:
@@ -248,6 +249,7 @@ class Events(commands.Cog):
                 value_parts.append(f"**Starts:** {timer}")
                 value_parts.append("───────────────────")
                 embed_upcoming.add_field(name=name, value="\n".join(value_parts), inline=False)
+            embed_upcoming.add_field(name="\u200b", value="\u200b" * 38, inline=False)
         else:
             embed_upcoming.description = "Sin eventos próximos en este momento."
         embed_upcoming.set_footer(text="")
