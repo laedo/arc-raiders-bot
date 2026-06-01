@@ -136,11 +136,17 @@ class Events(commands.Cog):
             timestamp=datetime.now(timezone.utc),
         )
 
+        seen = set()
         for m in maps_data[:25]:
             name = self._map_name(m)
+            # Deduplicate maps with variants (e.g. "Stella Montis Upper/Lower")
+            base_name = name.rsplit(" Upper", 1)[0].rsplit(" Lower", 1)[0]
+            if base_name in seen:
+                continue
+            seen.add(base_name)
             desc = self._map_description(m)
             value = desc if desc != "No description available." else "—"
-            embed.add_field(name=name, value=value, inline=False)
+            embed.add_field(name=base_name, value=value, inline=False)
 
         embed.set_footer(text="Data from Mahcks API")
         await interaction.followup.send(embed=embed)
