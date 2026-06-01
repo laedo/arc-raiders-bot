@@ -74,7 +74,9 @@ class Events(commands.Cog):
         if end_raw:
             try:
                 if isinstance(end_raw, (int, float)):
-                    end_dt = datetime.fromtimestamp(end_raw, tz=timezone.utc)
+                    # API returns milliseconds, convert to seconds
+                    ts = end_raw / 1000 if end_raw > 1e12 else end_raw
+                    end_dt = datetime.fromtimestamp(ts, tz=timezone.utc)
                 else:
                     end_dt = datetime.fromisoformat(str(end_raw).replace("Z", "+00:00"))
                 return f"<t:{int(end_dt.timestamp())}:R>"
